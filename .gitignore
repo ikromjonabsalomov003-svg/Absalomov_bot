@@ -1,0 +1,9 @@
+.bash_history
+.gitconfig
+.ssh/
+.cache/
+.config/
+.lesshst
+.env
+__pycache__/
+*.pyc
