@@ -1,0 +1,56 @@
+import os
+import requests
+from dotenv import load_dotenv
+
+load_dotenv()
+
+TOKEN = os.getenv("BOT_TOKEN")
+GEMINI_KEY = os.getenv("GEMINI_KEY")
+
+BASE = f"https://api.telegram.org/bot{TOKEN}"
+
+offset = 0
+
+def send(chat_id, text):
+    requests.post(BASE + "/sendMessage", data={
+        "chat_id": chat_id,
+        "text": text
+    })
+
+def ask_ai(text):
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key={GEMINI_KEY}"
+
+    payload = {
+        "contents": [
+            {
+                "parts": [{"text": text}]
+            }
+        ]
+    }
+
+    r = requests.post(url, json=payload)
+
+    try:
+        return r.json()["candidates"][0]["content"]["parts"][0]["text"]
+    except:
+        return "AI javob bermadi 😔"
+
+print("🚀 Bot ishga tushdi")
+
+while True:
+    r = requests.get(BASE + "/getUpdates", params={"timeout": 30, "offset": offset}).json()
+
+    for u in r.get("result", []):
+        offset = u["update_id"] + 1
+
+        msg = u.get("message")
+        if not msg:
+            continue
+
+        chat_id = msg["chat"]["id"]
+        text = msg.get("text", "")
+
+        if text == "/start":
+            send(chat_id, "Salom 👋 Men AI botman 🤖")
+        else:
+            send(chat_id, ask_ai(text))
